@@ -7,6 +7,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSession();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -22,6 +24,8 @@ if (app.Environment.IsProduction())
 }
 
 app.MapGet("/", () => "Hello World!");
+
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
