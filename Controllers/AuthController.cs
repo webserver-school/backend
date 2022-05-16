@@ -46,12 +46,14 @@ namespace App.Controllers
         [Route("/api/User")]
         public async Task<object> GetUser()
         {
-            if (!Request.Cookies.ContainsKey("access_token"))
+            var accessToken = Request.Cookies["access_token"];
+
+            if (accessToken == null)
             {
                 return StatusCode(401, new { error = "Unauthorized" });
             }
 
-            var spotify = new SpotifyClient(Request.Cookies["access_token"]);
+            var spotify = new SpotifyClient(accessToken);
 
             var user = await spotify.UserProfile.Current();
 
