@@ -38,7 +38,8 @@ namespace App.Controllers
             
             Response.Cookies.Append("access_token", response.AccessToken);
 
-            return Redirect("/");
+            Console.WriteLine(Environment.GetEnvironmentVariable("HOME_URL"));
+            return Redirect(Environment.GetEnvironmentVariable("HOME_URL") ?? "/");
         }
 
         [HttpGet]
@@ -63,7 +64,7 @@ namespace App.Controllers
         {
             Response.Cookies.Delete("access_token");
 
-            return Redirect("/");
+            return Redirect(Environment.GetEnvironmentVariable("HOME_URL") ?? "/");
         }
     }
 }
