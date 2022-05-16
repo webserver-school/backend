@@ -7,13 +7,30 @@ namespace App.Controllers
     [ApiController]
     public class RegisterController : Controller
     {
+        public string SPOTIFY_CLIENT_ID;
+        public string SPOTIFY_CLIENT_SECRET;
+
+        public RegisterController()
+        {
+            var SPOTIFY_CLIENT_ID = Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID");
+            var SPOTIFY_CLIENT_SECRET = Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_SECRET");
+
+            if (SPOTIFY_CLIENT_ID == null || SPOTIFY_CLIENT_SECRET == null)
+            {
+                throw new System.Exception("SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET is null");
+            }
+
+            this.SPOTIFY_CLIENT_ID = SPOTIFY_CLIENT_ID;
+            this.SPOTIFY_CLIENT_SECRET = SPOTIFY_CLIENT_SECRET;
+        }
+
         [HttpGet]
         [Route("/Login")]
         public object Login()
         {
             var loginRequest = new LoginRequest(
                 new Uri("http://localhost:5171/Login/Callback"),
-                Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID"),
+                this.SPOTIFY_CLIENT_ID,
                 LoginRequest.ResponseType.Code
             ) {
                 Scope = new[] { Scopes.PlaylistReadPrivate, Scopes.PlaylistReadCollaborative }
@@ -31,7 +48,7 @@ namespace App.Controllers
         public async Task<object> Callback(string code)
         {
             var response = await new OAuthClient().RequestToken(
-                new AuthorizationCodeTokenRequest(Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID"), Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_SECRET"), code, new Uri("http://localhost:5171/Login/Callback"))
+                new AuthorizationCodeTokenRequest(this.SPOTIFY_CLIENT_ID, this.SPOTIFY_CLIENT_SECRET, code, new Uri("http://localhost:5171/Login/Callback"))
             );
 
             var spotify = new SpotifyClient(response.AccessToken);
