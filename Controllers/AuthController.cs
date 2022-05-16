@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using SpotifyAPI.Web.Auth;
 using SpotifyAPI.Web;
 
 namespace App.Controllers
