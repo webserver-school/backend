@@ -1,85 +1,69 @@
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
-using Dapper;
+using SpotifyAPI.Web.Auth;
+using SpotifyAPI.Web;
 
 namespace App.Controllers
 {
-    public class UserLoginDto
-    {
-        public string? username { get; set; }
-        public string? password { get; set; }
-    }
-
-    public class UserRegisterDto
-    {
-        public string? username { get; set; }
-        public string? password { get; set; }
-        public string? confirm_password { get; set; }
-    }
-
     [ApiController]
     public class RegisterController : Controller
     {
-        [HttpPost]
-        [Route("/Register")]
-        public object Register([FromBody] UserRegisterDto userLogin)
-        {
-            if (userLogin.username == null || userLogin.password == null)
-            {
-                return StatusCode(400, "Please provide a username and password");
-            }
-
-            if (userLogin.password != userLogin.confirm_password)
-            {
-                return StatusCode(400, "Passwords do not match");
-            }
-
-            MySqlConnection connection = new MySqlConnection(Environment.GetEnvironmentVariable("ASPNETCORE_DB_STRING"));
-
-            connection.Open();
-
-            // Insert the page view into the database
-            connection.Execute("INSERT INTO users (username, password) VALUES (@username, @password)", new { @username = userLogin.username, @password = userLogin.password });
-
-            return StatusCode(200);
-        }
-
-        [HttpPost]
+        [HttpGet]
         [Route("/Login")]
-        public object Login([FromBody] UserLoginDto userLogin)
+        public object Login()
         {
-            if (userLogin.username == null || userLogin.password == null)
-            {
-                return StatusCode(400, "Please provide a username and password");
-            }
+            var loginRequest = new LoginRequest(
+                new Uri("http://localhost:5171/Login/Callback"),
+                Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID"),
+                LoginRequest.ResponseType.Code
+            ) {
+                Scope = new[] { Scopes.PlaylistReadPrivate, Scopes.PlaylistReadCollaborative }
+            };
 
-            MySqlConnection connection = new MySqlConnection(Environment.GetEnvironmentVariable("ASPNETCORE_DB_STRING"));
+            var uri = loginRequest.ToUri();
+            
+            Console.WriteLine(uri);
 
-            connection.Open();
-
-            // Insert the page view into the database
-            var user = connection.QueryFirst("SELECT * FROM users WHERE username = @username AND password = @password", new { @username = userLogin.username, @password = userLogin.password });
-
-            if (user == null)
-            {
-                return StatusCode(400, "Invalid username or password");
-            }
-
-            HttpContext.Session.SetString("username", userLogin.username);
-
-            return StatusCode(200, new { username = userLogin.username });
+            return Redirect(uri.ToString());
         }
 
         [HttpGet]
-        [Route("/User")]
-        public object GetUser()
+        [Route("/Login/Callback")]
+        public async Task<object> Callback(string code)
         {
-            if (HttpContext.Session.GetString("username") == null)
+            var response = await new OAuthClient().RequestToken(
+                new AuthorizationCodeTokenRequest(Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID"), Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_SECRET"), code, new Uri("http://localhost:5171/Login/Callback"))
+            );
+
+            var spotify = new SpotifyClient(response.AccessToken);
+            
+            Response.Cookies.Append("access_token", response.AccessToken);
+
+            return Redirect("/");
+        }
+
+        [HttpGet]
+        [Route("/api/User")]
+        public async Task<object> User()
+        {
+            if (!Request.Cookies.ContainsKey("access_token"))
             {
-                return StatusCode(400, new { message = "Not logged in" });
+                return StatusCode(401, new { error = "Unauthorized" });
             }
 
-            return StatusCode(200, new { username = HttpContext.Session.GetString("username") });
+            var spotify = new SpotifyClient(Request.Cookies["access_token"]);
+
+            var user = await spotify.UserProfile.Current();
+
+            return user;
+        }
+    
+        [HttpGet]
+        [Route("/Logout")]
+        public object Logout()
+        {
+            Response.Cookies.Delete("access_token");
+
+            return Redirect("/");
         }
     }
 }
