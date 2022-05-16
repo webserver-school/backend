@@ -44,7 +44,7 @@ namespace App.Controllers
 
         [HttpGet]
         [Route("/api/User")]
-        public async Task<object> User()
+        public async Task<object> GetUser()
         {
             if (!Request.Cookies.ContainsKey("access_token"))
             {
