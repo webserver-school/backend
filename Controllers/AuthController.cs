@@ -32,7 +32,7 @@ namespace App.Controllers
                 this.SPOTIFY_CLIENT_ID,
                 LoginRequest.ResponseType.Code
             ) {
-                Scope = new[] { Scopes.PlaylistReadPrivate, Scopes.PlaylistReadCollaborative }
+                Scope = new[] { Scopes.PlaylistReadPrivate, Scopes.PlaylistReadCollaborative, Scopes.UserTopRead }
             };
 
             var uri = loginRequest.ToUri();
