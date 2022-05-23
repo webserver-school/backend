@@ -54,7 +54,6 @@ namespace App.Controllers
             
             Response.Cookies.Append("access_token", response.AccessToken);
 
-            Console.WriteLine(Environment.GetEnvironmentVariable("HOME_URL"));
             return Redirect(Environment.GetEnvironmentVariable("HOME_URL") != null ? Environment.GetEnvironmentVariable("HOME_URL") + "/list" : "/list");
         }
 
