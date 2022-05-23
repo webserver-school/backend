@@ -8,7 +8,7 @@ namespace App.Controllers
     public class PageViewController : Controller
     {
         [HttpGet]
-        [Route("/PageViews")]
+        [Route("/api/PageViews")]
         public object Index(string page)
         {
             IPAddress? ip = HttpContext.Connection.RemoteIpAddress;
