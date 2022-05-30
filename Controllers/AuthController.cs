@@ -36,8 +36,6 @@ namespace App.Controllers
             };
 
             var uri = loginRequest.ToUri();
-            
-            Console.WriteLine(uri);
 
             return Redirect(uri.ToString());
         }
